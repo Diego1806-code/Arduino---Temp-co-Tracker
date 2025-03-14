@@ -1,27 +1,47 @@
-#include <dht.h>
-#include <LiquidCrystal_I2C.h>
+#include <Adafruit_AM2320.h>
 
-LiquidCrystal_I2C  lcd = liquidCrystal_I2C(0x27, 20, 4)
 
-dht DHT;
-
-#define DHT11_PIN 7
-
-void  setup(){
-  lcd.init(); // initialise I2C LCD
-  lcd.backlight(); // Turn On  the backlight of the I2C LCD
+// Example testing sketch for various DHT humidity/temperature sensors
+// Written by ladyada, public domain
+// REQUIRES the following Arduino libraries:
+// - DHT Sensor Library: https://github.com/adafruit/DHT-sensor-library
+// - Adafruit Unified Sensor Lib: https://github.com/adafruit/Adafruit_Sensor
+#include "DHT.h"
+#define DHTPIN 2 // Digital pin connected to the DHT sensor
+// Feather HUZZAH ESP8266 note: use pins 3, 4, 5, 12, 13 or 14 --
+// Pin 15 can work but DHT must be disconnected during program upload.
+// Uncomment whatever type you're using!
+#define DHTTYPE DHT11 // DHT 11
+//#define DHTTYPE DHT22 // DHT 22 (AM2302), AM2321
+//#define DHTTYPE DHT21 // DHT 21 (AM2301)
+// Initialize DHT sensor.
+DHT dht(A1, DHTTYPE);
+ 
+ 
+#include <LiquidCrystal.h>
+LiquidCrystal lcd(11, 12, 4, 5, 6, 7);
+void setup() {
+  Serial.begin(9600);
+  Serial.println(F("DHTxx test!"));
+  dht.begin();
+  lcd.begin(16, 2);
+  lcd.print("humidity: ");
+  lcd.print(dht.readHumidity());
+  lcd.setCursor(0, 1);
+  lcd.print(" temp:");
+  lcd.print(dht.readTemperature());
 }
-
-void loop(){
-  int chk = DHT.read11(DHT11_PIN);
-  lcd.setCursor(0,0); 
-  lcd.print("Temp: ");
-  lcd.print(DHT.temperature);
-  lcd.print((char)223);
-  lcd.print("C");
-  lcd.setCursor(0,1);
-  lcd.print("Humidity:  ");
-  lcd.print(DHT.humidity);
-  lcd.print("%");
-  delay(1000);
-}
+void loop() {
+  // Wait a few seconds between measurements.
+  delay(2000);
+  float h = dht.readHumidity();
+  // Read temperature as Celsius (the default)
+  float t = dht.readTemperature();
+  float f = dht.readTemperature(true);
+  // Check if any reads failed and exit early (to try again).
+  if (isnan(h) || isnan(t) || isnan(f)) {
+  Serial.println(F("Failed to read from DHT sensor!"));
+  float hic = dht.computeHeatIndex(t, h, false);
+  Serial.println(t);
+  return;
+}}
